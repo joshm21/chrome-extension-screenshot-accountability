@@ -1,0 +1,11 @@
+{
+    "name": "Screenshot Accountability Guard",
+    "description": "Monitor attempts to uninstall or disable Screenshot Accountability extension",
+    "version": "1.0",
+    "manifest_version": 3,
+    "background": {
+      "service_worker": "background.js"
+    },
+    "permissions": ["management"],
+    "host_permissions": ["<all_urls>"]
+  }
