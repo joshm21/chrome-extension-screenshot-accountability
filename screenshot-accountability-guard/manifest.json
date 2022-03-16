@@ -1,11 +1,17 @@
 {
-    "name": "Screenshot Accountability Guard",
-    "description": "Monitor attempts to uninstall or disable Screenshot Accountability extension",
-    "version": "1.0",
-    "manifest_version": 3,
-    "background": {
-      "service_worker": "background.js"
-    },
-    "permissions": ["management"],
-    "host_permissions": ["<all_urls>"]
-  }
+  "name": "Screenshot Accountability Guard",
+  "description": "Guard Screenshot Accountability extension by monitoring circumvention attempts (disable, uninstall, disallow incognito access)",
+  "version": "1.0",
+  "manifest_version": 3,
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": [
+    "identity",
+    "identity.email",
+    "management"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ]
+}
