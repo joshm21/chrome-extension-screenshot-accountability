@@ -1,52 +1,66 @@
+const SERVER_ENDPOINT = ""
+const MINUTES_UNTIL_NEXT_ALARM = 0.1
+const JPEG_QUALITY = 10
+
+
+
+const onAlarm = (alarm) => {
+  chrome.alarms.create({ delayInMinutes: MINUTES_UNTIL_NEXT_ALARM })
+  takeScreenshot()
+  checkIncognitoAccessAllowed()
+}
+
 const takeScreenshot = () => {
-  chrome.tabs.captureVisibleTab({ quality: 10 }, dataUrl => {
-    postToServer("uploadScreenshot", "Chromebook", dataUrl)
+  chrome.tabs.captureVisibleTab({ quality: JPEG_QUALITY }, dataUrl => {
+    postToServer({ event: "uploadScreenshot", image: dataUrl })
   })
 }
 
-const checkThisExtensionIncognitoAllowed = () => {
+const checkIncognitoAccessAllowed = () => {
   chrome.extension.isAllowedIncognitoAccess(isAllowedAccess => {
     if (!isAllowedAccess) {
-      postToServer("incognitoDisallowed", "Chromebook", null)
+      postToServer({ event: "incognitoAccessDisallowed" })
     }
   })
 }
 
-const onOtherExtensionDisabledOrUninstalled = (extensionInfo) => {
-  if (extensionInfo.name == "Screenshot Accountability Guard") {
-    postToServer("disabledOrUninstalled", "Chromebook", null)
+const onOtherExtensionDisabledOrUninstalled = async (extensionInfo) => {
+  const thisName = await getExtensionName()
+  const otherName = extensionInfo.name
+  if (`${thisName} Guard` == otherName || thisName == `${otherName} Guard`) {
+    postToServer({ event: "partnerExtensionDisabledOrUninstalled" })
   }
 }
 
-chrome.management.onDisabled.addListener(onOtherExtensionDisabledOrUninstalled)
-
-
-
-
-// Alarms - which run over repeatedly with short delay
-const setNextAlarm = () => {
-  chrome.alarms.create({ delayInMinutes: 2 })
-}
-
-const onAlarm = (alarm) => {
-  setNextAlarm()
-  takeScreenshot()
-  checkThisExtensionIncognitoAllowed()
-}
-
-chrome.alarms.onAlarm.addListener(onAlarm)
-chrome.alarms.create({ delayInMinutes: 0.1 })
-
-
-
-
-const postToServer = (action, device, img) => {
-  console.log(`postToServer; action = ${action}`)
-  const url = "your_server_url_endpoint"
-  const data = { timestamp: new Date().toISOString(), action, device, img }
-  fetch(url, {
+const postToServer = async (payload) => {
+  payload.timestamp = new Date().toISOString()
+  payload.userEmail = await getUserEmail()
+  payload.source = await getExtensionName()
+  fetch(SERVER_ENDPOINT, {
     method: "POST",
-    body: JSON.stringify(data),
+    body: JSON.stringify({ payload }),
     headers: { "Content-Type": "text/plain;charset=utf-8" }
   })
 }
+
+
+
+
+const getUserEmail = async () => {
+  return new Promise(resolve => {
+    chrome.identity.getProfileUserInfo(profileUserInfo => resolve(profileUserInfo.email))
+  })
+}
+
+const getExtensionName = async () => {
+  return new Promise(resolve => {
+    chrome.management.getSelf(extensionInfo => resolve(extensionInfo.name))
+  })
+}
+
+
+
+
+chrome.management.onDisabled.addListener(onOtherExtensionDisabledOrUninstalled)
+chrome.alarms.onAlarm.addListener(onAlarm)
+chrome.alarms.create({ delayInMinutes: 0.1 }) // asap
