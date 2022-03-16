@@ -1,11 +1,18 @@
 {
-    "name": "Screenshot Accountability",
-    "description": "Upload regular screenshots of active tab",
-    "version": "1.0",
-    "manifest_version": 3,
-    "background": {
-      "service_worker": "background.js"
-    },
-    "permissions": ["alarms", "management"],
-    "host_permissions": ["<all_urls>"]
-  }
+  "name": "Screenshot Accountability",
+  "description": "Upload regular screenshots of active tab to your server",
+  "version": "1.0",
+  "manifest_version": 3,
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": [
+    "alarms",
+    "identity",
+    "identity.email",
+    "management"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ]
+}
